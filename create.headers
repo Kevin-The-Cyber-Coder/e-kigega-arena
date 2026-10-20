@@ -1,0 +1,10 @@
+HTTP/1.1 302 Found
+Location: /products
+Vary: Accept
+Content-Type: text/plain; charset=utf-8
+Content-Length: 31
+Set-Cookie: ims.sid=s%3ANZ-3J8kR1AOK6NSp_KrcVRtEYTq_UIkE.q5gR4WGuX78cYURV1BqPUVN3Y18qLPSglBf%2BayYUf9s; Path=/; Expires=Tue, 20 Oct 2026 16:37:38 GMT; HttpOnly; SameSite=Lax
+Date: Tue, 20 Oct 2026 08:37:38 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

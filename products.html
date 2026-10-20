@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A simple inventory system for products and stock.">
+  <title>Products · Simple Inventory</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="/dashboard" aria-label="Simple Inventory dashboard">
+      <span class="brand-mark" aria-hidden="true">SI</span>
+      <span>Simple Inventory</span>
+    </a>
+
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/dashboard" >Dashboard</a>
+      <a href="/products" class=&#34;active&#34; aria-current=&#34;page&#34;>Products</a>
+      <a href="/stock" >Stock</a>
+      
+        <a href="/users" >Users</a>
+      
+    </nav>
+
+    <div class="account">
+      <span class="account-name">Alex Admin</span>
+      <span class="role-badge role-admin">Admin</span>
+      <form action="/logout" method="POST">
+        <button type="submit" class="link-button">Log out</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+
+<main class="shell page">
+  
+
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Products</p>
+      <h1>Products</h1>
+      <p>View the catalogue. Managers and admins can add or edit products.</p>
+    </div>
+  </div>
+
+  
+
+
+  
+
+  
+    <section class="card form-card">
+      <div class="card-head">
+        <div>
+          <h2>Add a product</h2>
+          <p>Create a new item for the inventory.</p>
+        </div>
+        
+      </div>
+
+      <form action="/products" method="POST" class="form-grid">
+        <label class="full">
+          Product name
+          <input
+            type="text"
+            name="name"
+            value=""
+            maxlength="80"
+            placeholder="e.g. Wireless Mouse"
+            required
+          >
+        </label>
+
+        <label>
+          Price
+          <input
+            type="number"
+            name="price"
+            value=""
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            required
+          >
+        </label>
+
+        <label>
+          Quantity in stock
+          <input
+            type="number"
+            name="quantity"
+            value="0"
+            min="0"
+            step="1"
+            required
+          >
+        </label>
+
+        <label>
+          Minimum stock
+          <input
+            type="number"
+            name="minStock"
+            value="5"
+            min="0"
+            step="1"
+            required
+          >
+          <span class="field-hint">The product is low when stock reaches this number.</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="button primary">
+            Add product
+          </button>
+          
+        </div>
+      </form>
+    </section>
+  
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>All products <span class="count">5</span></h2>
+        <p>Edit a product when its details change.</p>
+      </div>
+    </div>
+
+    
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="num">Price</th>
+              <th class="num">In stock</th>
+              <th class="num">Minimum</th>
+              <th>Status</th>
+              
+                <th class="actions">Actions</th>
+              
+            </tr>
+          </thead>
+          <tbody>
+            
+              
+              <tr>
+                <td>
+                  <span class="product-name">Coffee Beans</span>
+                  <span class="row-note">Added Oct 20, 10:36 AM</span>
+                </td>
+                <td class="num">$12.75</td>
+                <td class="num"><strong>18</strong></td>
+                <td class="num">6</td>
+                <td><span class="badge badge-success">In stock</span></td>
+                
+                  <td class="actions">
+                    <a href="/products?edit=6ad72804880bb30514062ff3" class="small-button">Edit</a>
+                    
+                      <form
+                        action="/products/6ad72804880bb30514062ff3/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete Coffee Beans? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    
+                  </td>
+                
+              </tr>
+            
+              
+              <tr>
+                <td>
+                  <span class="product-name">Desk Lamp</span>
+                  <span class="row-note">Added Oct 20, 10:36 AM</span>
+                </td>
+                <td class="num">$34.00</td>
+                <td class="num"><strong>0</strong></td>
+                <td class="num">5</td>
+                <td><span class="badge badge-danger">Out of stock</span></td>
+                
+                  <td class="actions">
+                    <a href="/products?edit=6ad72804880bb30514062ff2" class="small-button">Edit</a>
+                    
+                      <form
+                        action="/products/6ad72804880bb30514062ff2/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete Desk Lamp? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    
+                  </td>
+                
+              </tr>
+            
+              
+              <tr>
+                <td>
+                  <span class="product-name">Notebook A5</span>
+                  <span class="row-note">Added Oct 20, 10:36 AM</span>
+                </td>
+                <td class="num">$4.50</td>
+                <td class="num"><strong>3</strong></td>
+                <td class="num">8</td>
+                <td><span class="badge badge-warning">Low stock</span></td>
+                
+                  <td class="actions">
+                    <a href="/products?edit=6ad72804880bb30514062ff1" class="small-button">Edit</a>
+                    
+                      <form
+                        action="/products/6ad72804880bb30514062ff1/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete Notebook A5? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    
+                  </td>
+                
+              </tr>
+            
+              
+              <tr>
+                <td>
+                  <span class="product-name">USB-C Cable</span>
+                  <span class="row-note">Added Oct 20, 10:36 AM</span>
+                </td>
+                <td class="num">$9.99</td>
+                <td class="num"><strong>42</strong></td>
+                <td class="num">15</td>
+                <td><span class="badge badge-success">In stock</span></td>
+                
+                  <td class="actions">
+                    <a href="/products?edit=6ad72804880bb30514062ff0" class="small-button">Edit</a>
+                    
+                      <form
+                        action="/products/6ad72804880bb30514062ff0/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete USB-C Cable? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    
+                  </td>
+                
+              </tr>
+            
+              
+              <tr>
+                <td>
+                  <span class="product-name">Wireless Mouse</span>
+                  <span class="row-note">Added Oct 20, 10:36 AM</span>
+                </td>
+                <td class="num">$24.99</td>
+                <td class="num"><strong>8</strong></td>
+                <td class="num">10</td>
+                <td><span class="badge badge-warning">Low stock</span></td>
+                
+                  <td class="actions">
+                    <a href="/products?edit=6ad72804880bb30514062fef" class="small-button">Edit</a>
+                    
+                      <form
+                        action="/products/6ad72804880bb30514062fef/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete Wireless Mouse? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    
+                  </td>
+                
+              </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="shell">Simple Inventory &middot; A small Node.js, MongoDB and EJS project</div>
+</footer>
+</body>
+</html>
+

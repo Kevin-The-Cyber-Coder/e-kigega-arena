@@ -1,0 +1,10 @@
+HTTP/1.1 302 Found
+Location: /dashboard
+Vary: Accept
+Content-Type: text/plain; charset=utf-8
+Content-Length: 32
+Set-Cookie: ims.sid=s%3AO_Gkd3NntQfCWgsTpT8p0blJILM3OhNq.sddsOov%2BJW5n5BO6WaJtMgAw9gXxzDu5X8ef8Oe5ZVw; Path=/; Expires=Tue, 20 Oct 2026 16:37:47 GMT; HttpOnly; SameSite=Lax
+Date: Tue, 20 Oct 2026 08:37:47 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

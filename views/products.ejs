@@ -1,0 +1,173 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="shell page">
+  <% const canManage = currentUser.role === 'admin' || currentUser.role === 'manager'; %>
+
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Products</p>
+      <h1>Products</h1>
+      <p>View the catalogue. Managers and admins can add or edit products.</p>
+    </div>
+  </div>
+
+  <%- include('partials/flash') %>
+
+  <% if (errors.length > 0) { %>
+    <div class="alert alert-error" role="alert">
+      <strong>Please check the form:</strong>
+      <ul>
+        <% errors.forEach((error) => { %>
+          <li><%= error %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <% if (canManage) { %>
+    <section class="card form-card">
+      <div class="card-head">
+        <div>
+          <h2><%= editing ? 'Edit product' : 'Add a product' %></h2>
+          <p><%= editing ? 'Change the details below and save.' : 'Create a new item for the inventory.' %></p>
+        </div>
+        <% if (editing) { %>
+          <a href="/products" class="text-link">Cancel edit</a>
+        <% } %>
+      </div>
+
+      <form action="<%= editing ? '/products/' + editing._id + '/edit' : '/products' %>" method="POST" class="form-grid">
+        <label class="full">
+          Product name
+          <input
+            type="text"
+            name="name"
+            value="<%= values.name %>"
+            maxlength="80"
+            placeholder="e.g. Wireless Mouse"
+            required
+          >
+        </label>
+
+        <label>
+          Price
+          <input
+            type="number"
+            name="price"
+            value="<%= values.price %>"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            required
+          >
+        </label>
+
+        <label>
+          Quantity in stock
+          <input
+            type="number"
+            name="quantity"
+            value="<%= values.quantity %>"
+            min="0"
+            step="1"
+            required
+          >
+        </label>
+
+        <label>
+          Minimum stock
+          <input
+            type="number"
+            name="minStock"
+            value="<%= values.minStock %>"
+            min="0"
+            step="1"
+            required
+          >
+          <span class="field-hint">The product is low when stock reaches this number.</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="button primary">
+            <%= editing ? 'Save changes' : 'Add product' %>
+          </button>
+          <% if (editing) { %>
+            <a href="/products" class="button secondary">Cancel</a>
+          <% } %>
+        </div>
+      </form>
+    </section>
+  <% } %>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>All products <span class="count"><%= products.length %></span></h2>
+        <p><%= canManage ? 'Edit a product when its details change.' : 'Ask a manager if a product needs to be added or edited.' %></p>
+      </div>
+    </div>
+
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <strong>No products yet.</strong>
+        <p><%= canManage ? 'Use the form above to add your first product.' : 'A manager or admin can add the first product.' %></p>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="num">Price</th>
+              <th class="num">In stock</th>
+              <th class="num">Minimum</th>
+              <th>Status</th>
+              <% if (canManage) { %>
+                <th class="actions">Actions</th>
+              <% } %>
+            </tr>
+          </thead>
+          <tbody>
+            <% products.forEach((product) => { %>
+              <%
+                const status = product.quantity === 0
+                  ? { className: 'badge-danger', label: 'Out of stock' }
+                  : product.quantity <= product.minStock
+                    ? { className: 'badge-warning', label: 'Low stock' }
+                    : { className: 'badge-success', label: 'In stock' };
+              %>
+              <tr>
+                <td>
+                  <span class="product-name"><%= product.name %></span>
+                  <span class="row-note">Added <%= formatDate(product.createdAt) %></span>
+                </td>
+                <td class="num"><%= formatMoney(product.price) %></td>
+                <td class="num"><strong><%= product.quantity %></strong></td>
+                <td class="num"><%= product.minStock %></td>
+                <td><span class="badge <%= status.className %>"><%= status.label %></span></td>
+                <% if (canManage) { %>
+                  <td class="actions">
+                    <a href="/products?edit=<%= product._id %>" class="small-button">Edit</a>
+                    <% if (currentUser.role === 'admin') { %>
+                      <form
+                        action="/products/<%= product._id %>/delete"
+                        method="POST"
+                        class="inline-form"
+                        data-confirm="Delete <%= product.name %>? This cannot be undone."
+                      >
+                        <button type="submit" class="small-button danger">Delete</button>
+                      </form>
+                    <% } %>
+                  </td>
+                <% } %>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</main>
+
+<%- include('partials/foot') %>

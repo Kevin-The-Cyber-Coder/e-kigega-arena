@@ -1,0 +1,25 @@
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="/dashboard" aria-label="Simple Inventory dashboard">
+      <span class="brand-mark" aria-hidden="true">SI</span>
+      <span>Simple Inventory</span>
+    </a>
+
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/dashboard" <%= currentPath === '/dashboard' ? 'class="active" aria-current="page"' : '' %>>Dashboard</a>
+      <a href="/products" <%= currentPath === '/products' ? 'class="active" aria-current="page"' : '' %>>Products</a>
+      <a href="/stock" <%= currentPath === '/stock' ? 'class="active" aria-current="page"' : '' %>>Stock</a>
+      <% if (currentUser.role === 'admin') { %>
+        <a href="/users" <%= currentPath === '/users' ? 'class="active" aria-current="page"' : '' %>>Users</a>
+      <% } %>
+    </nav>
+
+    <div class="account">
+      <span class="account-name"><%= currentUser.name %></span>
+      <span class="role-badge role-<%= currentUser.role %>"><%= roleLabel(currentUser.role) %></span>
+      <form action="/logout" method="POST">
+        <button type="submit" class="link-button">Log out</button>
+      </form>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,29 @@
+{
+  "name": "Inventory Management ",
+  "version": "1.0.0",
+  "description": "A User-friendly inventory system built with Node.js, Express, MongoDB and EJS.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [
+    "inventory",
+    "express",
+    "mongodb",
+    "beginner"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

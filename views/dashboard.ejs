@@ -1,0 +1,171 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+
+<main class="shell page">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Dashboard</p>
+      <h1>Hello, <%= currentUser.name.split(' ')[0] %></h1>
+      <p>Here is what is happening in your inventory today.</p>
+    </div>
+
+    <div class="page-actions">
+      <% if (currentUser.role === 'admin') { %>
+        <a href="/users" class="button secondary">Add a user</a>
+      <% } else if (currentUser.role === 'manager') { %>
+        <a href="/products" class="button secondary">Add a product</a>
+      <% } else { %>
+        <a href="/stock" class="button secondary">Update stock</a>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('partials/flash') %>
+
+  <% if (currentUser.role === 'admin') { %>
+    <section class="stats stats-4" aria-label="Inventory summary">
+      <article class="stat-card accent-blue">
+        <span class="stat-label">Users</span>
+        <strong class="stat-value"><%= userCount %></strong>
+        <span class="stat-note">People with access</span>
+      </article>
+      <article class="stat-card accent-teal">
+        <span class="stat-label">Products</span>
+        <strong class="stat-value"><%= productCount %></strong>
+        <span class="stat-note">Items being tracked</span>
+      </article>
+      <article class="stat-card accent-green">
+        <span class="stat-label">Stock value</span>
+        <strong class="stat-value"><%= formatMoney(totalStockValue) %></strong>
+        <span class="stat-note">Price &times; quantity</span>
+      </article>
+      <article class="stat-card accent-amber">
+        <span class="stat-label">Low stock</span>
+        <strong class="stat-value"><%= lowStockProducts.length %></strong>
+        <span class="stat-note">At or below minimum</span>
+      </article>
+    </section>
+  <% } else if (currentUser.role === 'manager') { %>
+    <section class="stats stats-3" aria-label="Inventory summary">
+      <article class="stat-card accent-teal">
+        <span class="stat-label">Products</span>
+        <strong class="stat-value"><%= productCount %></strong>
+        <span class="stat-note">Items being tracked</span>
+      </article>
+      <article class="stat-card accent-green">
+        <span class="stat-label">Stock value</span>
+        <strong class="stat-value"><%= formatMoney(totalStockValue) %></strong>
+        <span class="stat-note">Price &times; quantity</span>
+      </article>
+      <article class="stat-card accent-amber">
+        <span class="stat-label">Low stock</span>
+        <strong class="stat-value"><%= lowStockProducts.length %></strong>
+        <span class="stat-note">At or below minimum</span>
+      </article>
+    </section>
+  <% } else { %>
+    <section class="stats stats-2" aria-label="Your stock summary">
+      <article class="stat-card accent-green">
+        <span class="stat-label">Stock added</span>
+        <strong class="stat-value"><%= stockAdded %></strong>
+        <span class="stat-note">Units added by you</span>
+      </article>
+      <article class="stat-card accent-amber">
+        <span class="stat-label">Stock removed</span>
+        <strong class="stat-value"><%= stockRemoved %></strong>
+        <span class="stat-note">Units removed by you</span>
+      </article>
+    </section>
+  <% } %>
+
+  <div class="dashboard-grid">
+    <% if (currentUser.role !== 'staff') { %>
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Low stock</h2>
+            <p>Products that need attention.</p>
+          </div>
+          <a href="/products" class="text-link">View products</a>
+        </div>
+
+        <% if (lowStockProducts.length === 0) { %>
+          <div class="empty-state">
+            <strong>Everything is well stocked.</strong>
+            <p>No product is at or below its minimum level.</p>
+          </div>
+        <% } else { %>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th class="num">In stock</th>
+                  <th class="num">Minimum</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% lowStockProducts.forEach((product) => { %>
+                  <tr>
+                    <td>
+                      <span class="product-name"><%= product.name %></span>
+                      <% if (product.quantity === 0) { %>
+                        <span class="badge badge-danger">Out of stock</span>
+                      <% } else { %>
+                        <span class="badge badge-warning">Low</span>
+                      <% } %>
+                    </td>
+                    <td class="num"><strong><%= product.quantity %></strong></td>
+                    <td class="num"><%= product.minStock %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </section>
+    <% } else { %>
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Quick actions</h2>
+            <p>Record stock as it comes in or goes out.</p>
+          </div>
+        </div>
+        <p class="muted">When new items arrive, use <strong>Stock in</strong>. When items are sold or used, use <strong>Stock out</strong>.</p>
+        <a href="/stock" class="button primary">Go to stock page</a>
+        <a href="/products" class="button secondary">View products</a>
+      </section>
+    <% } %>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2><%= currentUser.role === 'staff' ? 'Your recent actions' : 'Recent changes' %></h2>
+          <p><%= currentUser.role === 'staff' ? 'The latest stock updates you made.' : 'The latest activity from your team.' %></p>
+        </div>
+      </div>
+
+      <% if (recentChanges.length === 0) { %>
+        <div class="empty-state">
+          <strong>No activity yet.</strong>
+          <p>Changes will appear here as you use the inventory.</p>
+        </div>
+      <% } else { %>
+        <ul class="activity-list">
+          <% recentChanges.forEach((item) => { %>
+            <li>
+              <span class="activity-dot" data-type="<%= item.type %>" aria-hidden="true"></span>
+              <div class="activity-body">
+                <p><strong><%= item.actorName %></strong> <%= item.message %></p>
+                <span class="activity-meta"><%= roleLabel(item.actorRole) %> &middot; <%= formatDate(item.createdAt) %></span>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  </div>
+</main>
+
+<%- include('partials/foot') %>

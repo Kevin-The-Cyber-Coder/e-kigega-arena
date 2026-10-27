@@ -4,19 +4,20 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'Product name is required.'],
+      unique: true,
       trim: true,
-      maxlength: 80
+      maxlength: [80, 'Product name must be 80 characters or fewer.']
     },
     price: {
       type: Number,
-      required: true,
-      min: 0
+      required: [true, 'Price is required.'],
+      min: [0, 'Price cannot be negative.']
     },
     quantity: {
       type: Number,
       required: true,
-      min: 0,
+      min: [0, 'Quantity cannot be negative.'],
       default: 0,
       validate: {
         validator: Number.isInteger,
@@ -26,7 +27,7 @@ const productSchema = new mongoose.Schema(
     minStock: {
       type: Number,
       required: true,
-      min: 0,
+      min: [0, 'Minimum stock cannot be negative.'],
       default: 5,
       validate: {
         validator: Number.isInteger,

@@ -5,41 +5,42 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'Name is required.'],
       trim: true,
-      maxlength: 60
+      maxlength: [60, 'Name must be 60 characters or fewer.']
     },
     email: {
       type: String,
-      required: true,
+      required: [true, 'Email is required.'],
       unique: true,
       lowercase: true,
-      trim: true
+      trim: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email.']
     },
     password: {
       type: String,
-      required: true
+      required: [true, 'Password is required.'],
+      minlength: [6, 'Password must be at least 6 characters.']
     },
     role: {
       type: String,
-      enum: ['admin', 'manager', 'staff'],
+      enum: {
+        values: ['admin', 'manager', 'staff'],
+        message: 'Role must be admin, manager or staff.'
+      },
       default: 'staff'
     }
   },
   { timestamps: true }
 );
 
-// Hash the password automatically before saving a new user.
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
+// Hash a new or changed password before saving.
+userSchema.pre('save', async function () {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
   }
-
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
-// Small helper used by the login route.
 userSchema.methods.checkPassword = function (plainPassword) {
   return bcrypt.compare(plainPassword, this.password);
 };

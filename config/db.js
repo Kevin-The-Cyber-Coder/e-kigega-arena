@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Connect once when the app starts. Mongoose keeps the connection open.
 async function connectDB() {
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/simple_inventory';
 

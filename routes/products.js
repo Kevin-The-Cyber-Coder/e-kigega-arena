@@ -5,171 +5,77 @@ const Product = require('../models/Product');
 const Activity = require('../models/Activity');
 const { requireLogin, requireRole } = require('../middleware/auth');
 
-function readForm(body) {
+function productData(body) {
   return {
-    name: String(body.name || '').trim(),
-    price: String(body.price ?? '').trim(),
-    quantity: String(body.quantity ?? '').trim(),
-    minStock: String(body.minStock ?? '').trim()
+    name: body.name,
+    price: body.price,
+    quantity: body.quantity,
+    minStock: body.minStock
   };
 }
 
-function validateProduct(values) {
-  const errors = [];
-
-  if (!values.name) {
-    errors.push('Product name is required.');
-  } else if (values.name.length > 80) {
-    errors.push('Product name must be 80 characters or fewer.');
-  }
-
-  const price = Number(values.price);
-  if (values.price === '' || !Number.isFinite(price) || price < 0) {
-    errors.push('Price must be a number of 0 or more.');
-  }
-
-  const quantity = Number(values.quantity);
-  if (values.quantity === '' || !Number.isInteger(quantity) || quantity < 0) {
-    errors.push('Quantity must be a whole number of 0 or more.');
-  }
-
-  const minStock = Number(values.minStock);
-  if (values.minStock === '' || !Number.isInteger(minStock) || minStock < 0) {
-    errors.push('Minimum stock must be a whole number of 0 or more.');
-  }
-
-  return {
-    errors,
-    data: {
-      name: values.name,
-      price: Math.round(price * 100) / 100,
-      quantity,
-      minStock
-    }
-  };
+function notFound(res) {
+  return res.status(404).json({ error: 'Product not found.' });
 }
 
-function escapeRegExp(text) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-async function nameIsTaken(name, ignoreId = null) {
-  const query = { name: new RegExp(`^${escapeRegExp(name)}$`, 'i') };
-  if (ignoreId) query._id = { $ne: ignoreId };
-  return Product.exists(query);
-}
-
-// Everyone can see the products.
-router.get('/products', requireLogin, async (req, res, next) => {
-  try {
-    const products = await Product.find().sort({ name: 1 }).lean();
-    res.json({ products });
-  } catch (error) {
-    next(error);
-  }
+// GET all products.
+router.get('/products', requireLogin, async (req, res) => {
+  const products = await Product.find().sort({ name: 1 });
+  res.json({ products });
 });
 
-// Managers and admins can add products.
-router.post('/products', requireRole('admin', 'manager'), async (req, res, next) => {
-  const values = readForm(req.body);
-  const { errors, data } = validateProduct(values);
+// GET one product by id.
+router.get('/products/:id', requireLogin, async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return notFound(res);
 
-  try {
-    if (errors.length === 0 && (await nameIsTaken(data.name))) {
-      errors.push('A product with that name already exists.');
-    }
+  const product = await Product.findById(req.params.id);
+  if (!product) return notFound(res);
 
-    if (errors.length > 0) {
-      return res.status(400).json({
-        error: 'Please check the product details.',
-        errors
-      });
-    }
-
-    const product = await Product.create(data);
-
-    await Activity.record(req.user, 'product_added', `Added product ${product.name}`, {
-      productName: product.name
-    });
-
-    res.status(201).json({
-      message: `${product.name} was added.`,
-      product
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.json({ product });
 });
 
-// Managers and admins can edit products.
-router.put('/products/:id', requireRole('admin', 'manager'), async (req, res, next) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(404).json({ error: 'That product was not found.' });
-  }
+// POST a product (admin and manager only).
+router.post('/products', requireRole('admin', 'manager'), async (req, res) => {
+  const product = await Product.create(productData(req.body || {}));
 
-  const values = readForm(req.body);
-  const { errors, data } = validateProduct(values);
+  await Activity.record(req.user, 'product_added', `Added product ${product.name}`, {
+    productName: product.name
+  });
 
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ error: 'That product was not found.' });
-    }
-
-    if (errors.length === 0 && (await nameIsTaken(data.name, product._id))) {
-      errors.push('A product with that name already exists.');
-    }
-
-    if (errors.length > 0) {
-      return res.status(400).json({
-        error: 'Please check the product details.',
-        errors
-      });
-    }
-
-    product.name = data.name;
-    product.price = data.price;
-    product.quantity = data.quantity;
-    product.minStock = data.minStock;
-    await product.save();
-
-    await Activity.record(req.user, 'product_edited', `Edited product ${product.name}`, {
-      productName: product.name
-    });
-
-    res.json({
-      message: `${product.name} was updated.`,
-      product
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.status(201).json({ message: 'Product created.', product });
 });
 
-// Only an admin can delete a product.
-router.delete('/products/:id', requireRole('admin'), async (req, res, next) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(404).json({ error: 'That product was not found.' });
-  }
+// PUT (update) a product (admin and manager only).
+router.put('/products/:id', requireRole('admin', 'manager'), async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return notFound(res);
 
-  try {
-    const product = await Product.findById(req.params.id);
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    productData(req.body || {}),
+    { new: true, runValidators: true }
+  );
 
-    if (!product) {
-      return res.status(404).json({ error: 'That product was not found.' });
-    }
+  if (!product) return notFound(res);
 
-    await product.deleteOne();
+  await Activity.record(req.user, 'product_edited', `Edited product ${product.name}`, {
+    productName: product.name
+  });
 
-    await Activity.record(req.user, 'product_deleted', `Deleted product ${product.name}`, {
-      productName: product.name
-    });
+  res.json({ message: 'Product updated.', product });
+});
 
-    res.json({ message: `${product.name} was deleted.` });
-  } catch (error) {
-    next(error);
-  }
+// DELETE a product (admin only).
+router.delete('/products/:id', requireRole('admin'), async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return notFound(res);
+
+  const product = await Product.findByIdAndDelete(req.params.id);
+  if (!product) return notFound(res);
+
+  await Activity.record(req.user, 'product_deleted', `Deleted product ${product.name}`, {
+    productName: product.name
+  });
+
+  res.json({ message: 'Product deleted.' });
 });
 
 module.exports = router;

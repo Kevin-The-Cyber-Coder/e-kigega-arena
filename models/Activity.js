@@ -26,6 +26,7 @@ const activitySchema = new mongoose.Schema(
         'product_edited',
         'product_deleted',
         'user_added',
+        'user_edited',
         'user_deleted'
       ],
       required: true

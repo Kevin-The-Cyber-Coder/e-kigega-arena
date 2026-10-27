@@ -1,29 +1,23 @@
 const User = require('../models/User');
 
-// Put the logged-in user on req.user. API routes use this instead of views.
+// Add req.user when a valid login session exists.
 async function attachUser(req, res, next) {
-  if (!req.session.userId) {
-    return next();
-  }
+  if (!req.session.userId) return next();
 
-  try {
-    const user = await User.findById(req.session.userId).lean();
+  const user = await User.findById(req.session.userId).lean();
 
-    if (!user) {
-      delete req.session.userId;
-      return next();
-    }
-
+  if (user) {
     req.user = user;
-    next();
-  } catch (error) {
-    next(error);
+  } else {
+    delete req.session.userId;
   }
+
+  next();
 }
 
 function requireLogin(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ error: 'Please log in to continue.' });
+    return res.status(401).json({ error: 'Please log in first.' });
   }
 
   next();
@@ -32,11 +26,11 @@ function requireLogin(req, res, next) {
 function requireRole(...roles) {
   return function (req, res, next) {
     if (!req.user) {
-      return res.status(401).json({ error: 'Please log in to continue.' });
+      return res.status(401).json({ error: 'Please log in first.' });
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Your role does not allow that.' });
+      return res.status(403).json({ error: 'Your role cannot do this.' });
     }
 
     next();

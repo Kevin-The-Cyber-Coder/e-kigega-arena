@@ -32,8 +32,10 @@ app.use('/api', require('./routes/users'));
 // A small index of the API, useful when testing in Postman.
 app.get(['/', '/api'], (req, res) => {
   res.json({
-    name: 'Simple Inventory API',
+    name: 'E-Kigega Arena Inventory API',
     status: 'running',
+    roles: ['super_admin', 'admin', 'manager', 'staff'],
+    shifts: ['day', 'night'],
     login: 'POST /api/login',
     endpoints: [
       'GET /api/me',
@@ -49,9 +51,14 @@ app.get(['/', '/api'], (req, res) => {
       'POST /api/stock/in',
       'POST /api/stock/out',
       'GET /api/users',
+      'GET /api/users/roles',
       'GET /api/users/:id',
       'POST /api/users',
+      'POST /api/users/admins',
+      'POST /api/users/staff',
       'PUT /api/users/:id',
+      'PUT /api/users/:id/role',
+      'PUT /api/users/:id/shift',
       'DELETE /api/users/:id'
     ]
   });
@@ -63,22 +70,36 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-async function createFirstAdmin() {
-  if (await User.countDocuments()) return;
+// Create the default super admin when the database has none.
+async function createDefaultSuperAdmin() {
+  if (await User.exists({ role: 'super_admin' })) return;
+
+  const email = (process.env.SUPER_ADMIN_EMAIL || 'superadmin@example.com').toLowerCase();
+
+  // If the configured email already belongs to an account, promote it.
+  const existing = await User.findOne({ email });
+  if (existing) {
+    existing.role = 'super_admin';
+    existing.shift = null;
+    await existing.save();
+    console.log(`Existing account ${email} promoted to super admin.`);
+    return;
+  }
 
   await User.create({
-    name: process.env.ADMIN_NAME || 'Admin',
-    email: process.env.ADMIN_EMAIL || 'admin@example.com',
-    password: process.env.ADMIN_PASSWORD || 'admin123',
-    role: 'admin'
+    name: process.env.SUPER_ADMIN_NAME || 'Super Admin',
+    email,
+    password: process.env.SUPER_ADMIN_PASSWORD || 'superadmin123',
+    role: 'super_admin',
+    createdByName: 'System'
   });
 
-  console.log('First admin created from .env');
+  console.log(`Default super admin created: ${email}`);
 }
 
 async function start() {
   await connectDB();
-  await createFirstAdmin();
+  await createDefaultSuperAdmin();
   app.listen(PORT, () => console.log(`API: http://localhost:${PORT}/api`));
 }
 

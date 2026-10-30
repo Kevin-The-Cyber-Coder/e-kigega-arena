@@ -1,17 +1,23 @@
 {
   "info": {
-    "name": "Simple Inventory API",
-    "description": "Backend-only inventory API. Run the requests in order (or use the Collection Runner). The login request stores the session cookie automatically, so later requests work without a token.",
+    "name": "E-Kigega Arena Inventory API",
+    "description": "Backend-only inventory API. Run the requests in order (or use the Collection Runner). Login stores the session cookie automatically. The default super admin creates a sub admin, the sub admin creates day and night staff, and products show who added them.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:3000" },
-    { "key": "adminEmail", "value": "admin@example.com" },
+    { "key": "superAdminEmail", "value": "superadmin@example.com" },
+    { "key": "superAdminPassword", "value": "superadmin123" },
+    { "key": "superAdminName", "value": "Super Admin" },
+    { "key": "adminEmail", "value": "" },
     { "key": "adminPassword", "value": "admin123" },
+    { "key": "staffEmail", "value": "" },
+    { "key": "staffPassword", "value": "staff123" },
     { "key": "productId", "value": "" },
     { "key": "productName", "value": "Postman Notebook" },
     { "key": "userId", "value": "" },
-    { "key": "userEmail", "value": "postman.user@example.com" }
+    { "key": "subAdminId", "value": "" },
+    { "key": "staffId", "value": "" }
   ],
   "item": [
     {
@@ -35,15 +41,15 @@
       ]
     },
     {
-      "name": "02. Login as admin",
+      "name": "02. Login as super admin",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "url": "{{baseUrl}}/api/login",
-        "description": "Run this first. Postman keeps the session cookie.",
+        "description": "Run this first with the default credentials from .env.",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "raw": "{\n  \"email\": \"{{superAdminEmail}}\",\n  \"password\": \"{{superAdminPassword}}\"\n}",
           "options": { "raw": { "language": "json" } }
         }
       },
@@ -54,7 +60,8 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status 200', () => pm.response.to.have.status(200));",
-              "pm.test('Logged in as admin', () => pm.expect(pm.response.json().user.role).to.eql('admin'));"
+              "pm.test('Logged in as super_admin', () => pm.expect(pm.response.json().user.role).to.eql('super_admin'));",
+              "pm.collectionVariables.set('superAdminName', pm.response.json().user.name);"
             ]
           }
         }
@@ -99,7 +106,244 @@
       ]
     },
     {
-      "name": "05. Get all products",
+      "name": "05. Create sub admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/users/admins",
+        "description": "Only the super admin can create a sub admin.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sub Admin\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('adminEmail') || pm.collectionVariables.get('adminEmail').includes('{{$timestamp}}')) { pm.collectionVariables.set('adminEmail', 'subadmin.' + Date.now() + '@example.com'); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Role is admin', () => pm.expect(pm.response.json().user.role).to.eql('admin'));",
+              "pm.collectionVariables.set('subAdminId', pm.response.json().user._id);",
+              "pm.collectionVariables.set('adminEmail', pm.response.json().user.email);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Login as sub admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Logged in as admin', () => pm.expect(pm.response.json().user.role).to.eql('admin'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Create day shift staff",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/users/staff",
+        "description": "The sub admin creates a staff member for the day shift.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Day Staff\",\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"{{staffPassword}}\",\n  \"shift\": \"day\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('staffEmail') || pm.collectionVariables.get('staffEmail').includes('{{$timestamp}}')) { pm.collectionVariables.set('staffEmail', 'daystaff.' + Date.now() + '@example.com'); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Shift is day', () => pm.expect(pm.response.json().user.shift).to.eql('day'));",
+              "pm.collectionVariables.set('staffId', pm.response.json().user._id);",
+              "pm.collectionVariables.set('staffEmail', pm.response.json().user.email);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Create night shift staff",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/users/staff",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Night Staff\",\n  \"email\": \"nightstaff.{{$timestamp}}@example.com\",\n  \"password\": \"{{staffPassword}}\",\n  \"shift\": \"night\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Shift is night', () => pm.expect(pm.response.json().user.shift).to.eql('night'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Assign role and shift",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/users/{{staffId}}/role",
+        "description": "An admin can assign manager or staff roles. Staff need a shift.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"staff\",\n  \"shift\": \"night\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Shift changed to night', () => pm.expect(pm.response.json().user.shift).to.eql('night'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Change staff shift",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/users/{{staffId}}/shift",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shift\": \"day\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Shift changed to day', () => pm.expect(pm.response.json().user.shift).to.eql('day'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Get staff by role and shift",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/users?role=staff&shift=day"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Get available roles and shifts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/users/roles"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Login as super admin again",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{superAdminEmail}}\",\n  \"password\": \"{{superAdminPassword}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Get all products",
       "request": {
         "method": "GET",
         "header": [],
@@ -119,7 +363,7 @@
       ]
     },
     {
-      "name": "06. Create product",
+      "name": "15. Create product (added by is saved)",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -146,14 +390,16 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status 201', () => pm.response.to.have.status(201));",
-              "const body = pm.response.json(); pm.collectionVariables.set('productId', body.product._id);"
+              "const body = pm.response.json();",
+              "pm.test('Product shows who added it', () => pm.expect(body.product.addedByName).to.eql(pm.collectionVariables.get('superAdminName')));",
+              "pm.collectionVariables.set('productId', body.product._id);"
             ]
           }
         }
       ]
     },
     {
-      "name": "07. Get product by id",
+      "name": "16. Get product by id",
       "request": {
         "method": "GET",
         "header": [],
@@ -165,14 +411,15 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Added by is present', () => pm.expect(pm.response.json().product.addedByName).to.be.a('string'));"
             ]
           }
         }
       ]
     },
     {
-      "name": "08. Update product",
+      "name": "17. Update product",
       "request": {
         "method": "PUT",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -189,14 +436,15 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Updated by is present', () => pm.expect(pm.response.json().product.updatedByName).to.be.a('string'));"
             ]
           }
         }
       ]
     },
     {
-      "name": "09. Stock in",
+      "name": "18. Stock in",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -220,7 +468,7 @@
       ]
     },
     {
-      "name": "10. Stock out",
+      "name": "19. Stock out",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -244,7 +492,7 @@
       ]
     },
     {
-      "name": "11. Get stock and movements",
+      "name": "20. Get stock and movements",
       "request": {
         "method": "GET",
         "header": [],
@@ -263,11 +511,11 @@
       ]
     },
     {
-      "name": "12. Get all users",
+      "name": "21. Get user by id",
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{baseUrl}}/api/users"
+        "url": "{{baseUrl}}/api/users/{{staffId}}"
       },
       "event": [
         {
@@ -282,88 +530,11 @@
       ]
     },
     {
-      "name": "13. Create user",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": "{{baseUrl}}/api/users",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"secret123\",\n  \"role\": \"staff\"\n}",
-          "options": { "raw": { "language": "json" } }
-        }
-      },
-      "event": [
-        {
-          "listen": "prerequest",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.collectionVariables.set('userEmail', 'postman.' + Date.now() + '@example.com');"
-            ]
-          }
-        },
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Status 201', () => pm.response.to.have.status(201));",
-              "const body = pm.response.json(); pm.collectionVariables.set('userId', body.user._id);"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "14. Get user by id",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/api/users/{{userId}}"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "15. Update user",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": "{{baseUrl}}/api/users/{{userId}}",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Postman User Updated\",\n  \"role\": \"manager\"\n}",
-          "options": { "raw": { "language": "json" } }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "16. Delete user",
+      "name": "22. Delete staff",
       "request": {
         "method": "DELETE",
         "header": [],
-        "url": "{{baseUrl}}/api/users/{{userId}}"
+        "url": "{{baseUrl}}/api/users/{{staffId}}"
       },
       "event": [
         {
@@ -378,7 +549,26 @@
       ]
     },
     {
-      "name": "17. Delete product",
+      "name": "23. Delete sub admin",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/users/{{subAdminId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24. Delete product",
       "request": {
         "method": "DELETE",
         "header": [],
@@ -397,7 +587,7 @@
       ]
     },
     {
-      "name": "18. Logout",
+      "name": "25. Logout",
       "request": {
         "method": "POST",
         "header": [],

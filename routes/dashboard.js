@@ -27,7 +27,13 @@ router.get('/dashboard', requireLogin, async (req, res) => {
       .filter((item) => item.type === 'stock_out')
       .reduce((sum, item) => sum + item.amount, 0);
 
-    return res.json({ role: 'staff', stockAdded, stockRemoved, recentChanges });
+    return res.json({
+      role: 'staff',
+      shift: req.user.shift || null,
+      stockAdded,
+      stockRemoved,
+      recentChanges
+    });
   }
 
   const products = await Product.find();
@@ -47,8 +53,11 @@ router.get('/dashboard', requireLogin, async (req, res) => {
     recentChanges
   };
 
-  if (req.user.role === 'admin') {
+  if (['super_admin', 'admin'].includes(req.user.role)) {
     data.userCount = await User.countDocuments();
+    data.dayStaffCount = await User.countDocuments({ role: 'staff', shift: 'day' });
+    data.nightStaffCount = await User.countDocuments({ role: 'staff', shift: 'night' });
+    data.adminCount = await User.countDocuments({ role: 'admin' });
   }
 
   res.json(data);

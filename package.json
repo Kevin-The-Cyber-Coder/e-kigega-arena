@@ -1,7 +1,7 @@
 {
-  "name": "simple-inventory-system",
+  "name": "e-kigega-arena-inventory",
   "version": "1.0.0",
-  "description": "A beginner-friendly inventory REST API built with Node.js, Express 5 and MongoDB.",
+  "description": "A backend-only inventory REST API with super admin, sub admin and day/night staff roles.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -14,7 +14,7 @@ const activitySchema = new mongoose.Schema(
     },
     actorRole: {
       type: String,
-      enum: ['admin', 'manager', 'staff'],
+      enum: ['super_admin', 'admin', 'manager', 'staff'],
       required: true
     },
     type: {
@@ -27,7 +27,9 @@ const activitySchema = new mongoose.Schema(
         'product_deleted',
         'user_added',
         'user_edited',
-        'user_deleted'
+        'user_deleted',
+        'role_assigned',
+        'shift_assigned'
       ],
       required: true
     },

@@ -1,10 +1,13 @@
-# E-Kigega Arena Inventory API
+# E-Kigega Arena Inventory System
 
-A full backend-only inventory API built with Node.js, Express 5 and MongoDB.
-There is no HTML and no CSS. Every feature is used through JSON endpoints.
+A full-stack inventory system with a Node.js, Express 5 and MongoDB API plus a
+modern React + Vite dashboard. The system has a default **super admin**, sub
+admins, managers and day/night staff. Products remember who added them and who
+last edited them.
 
-The system has a default **super admin**, sub admins, managers and day/night
-staff. Products remember who added them and who last edited them.
+The dashboard includes animated statistics, product and stock management,
+role-aware team controls, search and filters, responsive layouts and
+SweetAlert2 notifications and confirmations.
 
 ## Quick start
 
@@ -30,6 +33,37 @@ Change these values in `.env` before deploying anywhere real:
 SUPER_ADMIN_NAME=Super Admin
 SUPER_ADMIN_EMAIL=superadmin@example.com
 SUPER_ADMIN_PASSWORD=superadmin123
+```
+
+## Frontend dashboard
+
+Keep the backend running, then start the React frontend in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173** and sign in with the default super admin
+credentials above. Vite proxies `/api` requests to the backend at
+`http://localhost:3000`.
+
+The frontend includes:
+
+- A polished login screen with show/hide password and demo credential autofill.
+- Animated dashboard cards, low-stock alerts, recent activity and shift coverage.
+- Product cards and table views with search, stock filters, sorting and creator details.
+- A stock room with in/out dialogs, quick amounts and a live movement history.
+- Team management for sub admins, managers and day/night staff with role and shift assignment.
+- SweetAlert2 success toasts, error dialogs and delete confirmations.
+- Mobile sidebar, responsive grids and reduced-motion support.
+
+To create a production build:
+
+```bash
+cd frontend
+npm run build
 ```
 
 ## How accounts work
@@ -371,3 +405,7 @@ staff member, assigns roles and shifts, creates a product and checks
 - `routes/` — auth, dashboard, products, stock and users
 - `utils/publicUser.js` — hides passwords from responses
 - `postman/` — ready-to-run Postman collection
+- `frontend/` — React + Vite dashboard with SweetAlert2 and Lucide icons
+- `frontend/src/pages/` — login, dashboard, products, stock and team pages
+- `frontend/src/components/` — layout, modals, cards, badges and activity feed
+- `frontend/src/styles/global.css` — responsive design system and animations

@@ -23,18 +23,31 @@ function requireLogin(req, res, next) {
   next();
 }
 
+// The super admin can do everything a lower role can do.
 function requireRole(...roles) {
   return function (req, res, next) {
     if (!req.user) {
       return res.status(401).json({ error: 'Please log in first.' });
     }
 
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Your role cannot do this.' });
+    if (req.user.role === 'super_admin' || roles.includes(req.user.role)) {
+      return next();
     }
 
-    next();
+    return res.status(403).json({ error: 'Your role cannot do this.' });
   };
 }
 
-module.exports = { attachUser, requireLogin, requireRole };
+function requireSuperAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Please log in first.' });
+  }
+
+  if (req.user.role !== 'super_admin') {
+    return res.status(403).json({ error: 'Only the super admin can do this.' });
+  }
+
+  next();
+}
+
+module.exports = { attachUser, requireLogin, requireRole, requireSuperAdmin };

@@ -5,6 +5,8 @@ function publicUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    shift: user.shift || null,
+    createdByName: user.createdByName || 'System',
     createdAt: user.createdAt
   };
 }

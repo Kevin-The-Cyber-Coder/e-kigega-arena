@@ -33,6 +33,30 @@ const productSchema = new mongoose.Schema(
         validator: Number.isInteger,
         message: 'Minimum stock must be a whole number.'
       }
+    },
+    // The user who added this product.
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    addedByName: {
+      type: String,
+      default: 'Unknown'
+    },
+    addedByRole: {
+      type: String,
+      default: ''
+    },
+    // The user who last edited this product.
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    updatedByName: {
+      type: String,
+      default: ''
     }
   },
   { timestamps: true }

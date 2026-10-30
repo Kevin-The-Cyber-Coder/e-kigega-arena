@@ -9,9 +9,15 @@ The dashboard includes animated statistics, product and stock management,
 role-aware team controls, search and filters, responsive layouts and
 SweetAlert2 notifications and confirmations.
 
+## Project structure
+
+- `backend/` — Express API, MongoDB models, middleware, routes, Postman collection and backend dependencies
+- `frontend/` — React + Vite dashboard with SweetAlert2 and Lucide icons
+
 ## Quick start
 
 ```bash
+cd backend
 npm install
 copy .env.example .env
 npm start
@@ -37,7 +43,8 @@ SUPER_ADMIN_PASSWORD=superadmin123
 
 ## Frontend dashboard
 
-Keep the backend running, then start the React frontend in a second terminal:
+Keep the backend running, then start the React frontend from a second terminal
+at the repository root:
 
 ```bash
 cd frontend
@@ -386,9 +393,9 @@ your level, or the last remaining sub admin.
 
 ## Test in Postman
 
-1. Start the server with `npm start`.
+1. Start the server from the `backend` folder with `npm start`.
 2. In Postman choose **Import** and select
-   `postman/Simple-Inventory.postman_collection.json`.
+   `backend/postman/Simple-Inventory.postman_collection.json`.
 3. Run **02. Login as super admin** using the default credentials.
 4. Run the rest in number order, or use **Run collection**.
 
@@ -398,13 +405,13 @@ staff member, assigns roles and shifts, creates a product and checks
 
 ## Main files
 
-- `server.js` — starts Express, registers routes and creates the default super admin
-- `config/db.js` — MongoDB connection
-- `models/` — User, Product and Activity schemas
-- `middleware/` — login checks, role checks and JSON error handling
-- `routes/` — auth, dashboard, products, stock and users
-- `utils/publicUser.js` — hides passwords from responses
-- `postman/` — ready-to-run Postman collection
+- `backend/server.js` — starts Express, registers routes and creates the default super admin
+- `backend/config/db.js` — MongoDB connection
+- `backend/models/` — User, Product and Activity schemas
+- `backend/middleware/` — login checks, role checks and JSON error handling
+- `backend/routes/` — auth, dashboard, products, stock and users
+- `backend/utils/publicUser.js` — hides passwords from responses
+- `backend/postman/` — ready-to-run Postman collection
 - `frontend/` — React + Vite dashboard with SweetAlert2 and Lucide icons
 - `frontend/src/pages/` — login, dashboard, products, stock and team pages
 - `frontend/src/components/` — layout, modals, cards, badges and activity feed
